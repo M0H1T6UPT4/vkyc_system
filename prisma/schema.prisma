@@ -1,0 +1,59 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  username  String   @unique @default("user")
+  email     String   @unique
+  password  String
+  role      String   @default("agent")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  rooms     Room[]
+}
+
+model Room {
+  id                   String      @id @default(cuid())
+  customerName         String
+  applicationId        String
+  inviteToken          String      @unique @default(cuid())
+  status               RoomStatus  @default(PENDING)
+  agentId              String
+  agent                User        @relation(fields: [agentId], references: [id])
+  isRecording          Boolean     @default(false)
+  notes                String?
+  isCustomerOnline     Boolean     @default(false)
+  lastCustomerActivity DateTime?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  completedAt          DateTime?
+  recordings           Recording[]
+}
+
+model Recording {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  fileUrl   String
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum RoomStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  REJECTED
+}
